@@ -1,7 +1,6 @@
 package com.example.reverendcode.constellation
 
 import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 
 /**
@@ -9,17 +8,14 @@ import android.arch.lifecycle.ViewModel
  */
 
 
-class MyViewModel : ViewModel() {
-    private var relays: LiveData<List<Relay>>? = null
+class MyViewModel(var relays: LiveData<List<Relay>>? = null) : ViewModel() {
 
-    fun getRelays(): LiveData<List<Relay>> {
+    fun getRelays(relayDao: RelayDao): LiveData<List<Relay>> {
         if (relays == null) {
-            loadRelays()
+            relays = relayDao.getAllRelays()
         }
         return relays!!
     }
 
-    private fun loadRelays() {
-        //do async call here.
-    }
+
 }
