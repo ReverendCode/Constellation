@@ -1,35 +1,39 @@
 package com.example.reverendcode.constellation
 
 import android.arch.lifecycle.LiveData
+import android.arch.persistence.db.SupportSQLiteDatabase
 import android.arch.persistence.room.*
-import android.arch.persistence.room.ForeignKey.CASCADE
+import android.arch.persistence.room.migration.Migration
 
 /**
  * Created by ReverendCode on 3/6/18.
  */
 
-@Database(entities = [(Relay::class), (Sensor::class)],version = 2)
+@Database(entities = [(Relay::class), (Sensor::class), (HouseRoom::class)],version = 4)
 abstract class RoomDb : RoomDatabase() {
+    companion object {
+        val MIG_1_2 = Migration1To2()
+    }
     abstract fun getRelayDao() : RelayDao
     abstract fun getSensorDao() : SensorDao
-//    abstract fun getSensorLogDao() : SensorLogDao
-//    abstract fun getRelayLogDao() : RelayLogDao
-    //TODO(Dwenzel): provide a migration path..
+}
+
+class Migration1To2 : Migration(1,2) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+    }
 }
 
 @Dao
     interface BaseDao<in T>{
+        @Insert
+        fun insert(vararg t: T)
 
-    @Insert
-    fun insert(vararg t: T)
+        @Update
+        fun update(vararg t: T)
 
-    @Update
-    fun update(vararg t: T)
-
-    @Delete
-    fun delete(vararg t: T)
-
-}
+        @Delete
+        fun delete(vararg t: T)
+    }
 
 @Dao
     interface RelayDao : BaseDao<Relay> {
@@ -58,73 +62,22 @@ abstract class RoomDb : RoomDatabase() {
 }
 
 @Dao
-    interface SensorLogDao : BaseDao<SensorLog> {
-
-    @Query("SELECT * FROM sensor_logs")
-    fun getAllSensorLogs() : List<SensorLog>
-
-    @Query("SELECT * FROM sensor_logs WHERE sensorId = :sensor LIMIT :lim ORDER BY timestamp DESC")
-    fun getRecentSensorLogsForId(sensor: Sensor, lim: Int = 10) : LiveData<List<SensorLog>>
-}
-
-@Dao
-    interface RelayLogDao : BaseDao<RelayLog> {
-
-    @Query("SELECT * FROM relay_logs")
-    fun getAllRelayLogs() : LiveData<List<RelayLog>>
-
-    @Query("SELECT * FROM relay_logs WHERE relayId = :id LIMIT :lim ORDER BY timestamp DESC")
-    fun getRecentRelayLogsById(id: Long, lim: Int = 10) : LiveData<List<RelayLog>>
+    interface RoomDao : BaseDao<HouseRoom> {
+    @Query("SELECT * FROM rooms")
+fun getAllRooms() : List<HouseRoom>
 }
 
 @Entity(tableName = "relays")
 data class Relay (
        @PrimaryKey(autoGenerate = true)
-       override val uid : Long,
+       val uid : Long,
        val deviceId : String,
        val name : String,
        val roomName: String,
-       override val currentValue: Boolean
-) : Satellite
-
-@Entity(tableName = "sensor_logs",
-        foreignKeys = [(ForeignKey(
-                entity = Sensor::class,
-                parentColumns = arrayOf("uid"),
-                childColumns = arrayOf("sensorId"),
-                onDelete = CASCADE))])
-data class SensorLog(
-        @PrimaryKey(autoGenerate = true)
-        val uid : Long,
-        val sensorId: Long,
-        val roomName: String,
-        val timestamp: Long,
-        val sensorValue: Long
+       val pinId: Int,
+       val currentValue: Boolean
 )
 
-@Entity(tableName = "relay_logs",
-        foreignKeys = [(ForeignKey(
-                entity = Relay::class,
-                parentColumns = arrayOf("uid"),
-                childColumns = arrayOf("relayId"),
-                onDelete = CASCADE))])
-data class RelayLog(
-        @PrimaryKey(autoGenerate = true)
-        val uid : Long,
-        val relayId : Long,
-        val timestamp : Long,
-        val newValue : Boolean
-)
-
-data class SensorWithLogs(
-        @Embedded
-        val sensor: Sensor,
-        @Relation(
-                parentColumn = "uid",
-                entityColumn = "sensorId",
-                entity = Sensor::class)
-        val logs: List<SensorLog>
-)
 @Entity(tableName = "sensors")
 data class Sensor(
         @PrimaryKey(autoGenerate = true)
@@ -135,8 +88,14 @@ data class Sensor(
         override val currentValue: Long
 ) : Satellite
 
+@Entity(tableName = "rooms")
+data class HouseRoom(
+        @PrimaryKey(autoGenerate = true)
+        val uid : Long,
+        val roomName: String
+)
 
- interface Satellite {
-     val uid : Long
-     val currentValue : Any
- }
+interface Satellite {
+    val uid : Long
+    val currentValue : Any
+}
