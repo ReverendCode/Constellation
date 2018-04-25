@@ -9,13 +9,10 @@ import android.arch.lifecycle.ViewModel
 
 
 class MyViewModel(var relays: LiveData<List<Relay>>? = null) : ViewModel() {
-
     fun getRelays(relayDao: RelayDao): LiveData<List<Relay>> {
         if (relays == null) {
             relays = relayDao.getAllRelays()
         }
         return relays!!
     }
-
-
 }
