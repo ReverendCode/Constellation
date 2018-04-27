@@ -75,6 +75,5 @@ class HouseRoomRecyclerAdapter(private var roomList : List<HouseRoom>,
         val switch4 = view.switch_room_4
         val switch5 = view.switch_room_5
 
-
     }
 }
