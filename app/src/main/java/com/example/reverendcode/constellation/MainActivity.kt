@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
 
         networkQueue = Volley.newRequestQueue(this)
         roomDb = Room.databaseBuilder(this, RoomDb::class.java,"foo")
-                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigration() //TODO: this eventually needs to be removed.
                 .build()
 
         relayDispatch = RelayDispatch(roomDb.getRelayDao(), networkQueue)
@@ -46,8 +46,9 @@ class MainActivity : AppCompatActivity() {
                         }
                         recyclerView.adapter = relayAdapter
                     }
-                    relayAdapter?.replaceItems(list)
-                    relayAdapter?.notifyDataSetChanged()
+//                    These calls should never be null at this point, so allow any NPE's to bubble up.
+                    relayAdapter!!.replaceItems(list)
+                    relayAdapter!!.notifyDataSetChanged()
         })
 
 //        async(UI) {
@@ -56,7 +57,6 @@ class MainActivity : AppCompatActivity() {
 //                       Relay(1L,"192.168.4.1","Thing Led","Test",2,false))
 //                }
 //           }
-//            Log.d("async","this should be an update")
 //        }
     }
 }

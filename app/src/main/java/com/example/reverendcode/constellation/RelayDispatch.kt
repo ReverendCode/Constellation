@@ -15,9 +15,9 @@ import org.jetbrains.anko.coroutines.experimental.bg
 class RelayDispatch(private val relayDao: RelayDao, private val networkQueue: RequestQueue) {
 
     fun updateRelay(relay: Relay) {
-
+//            This inline if/else handles the fact that the ESP8266 High and Low seem to be reversed.
          val url = "http://${relay.deviceId}/${relay.pinId}/${if (relay.currentValue) 1 else 0 }/"
-         val resp = object : StringRequest(Request.Method.GET, url,
+         val resp = StringRequest(Request.Method.GET, url,
                  Response.Listener {
                      //update liveData
                      bg {
@@ -27,11 +27,7 @@ class RelayDispatch(private val relayDao: RelayDao, private val networkQueue: Re
                  Response.ErrorListener {
                      Log.e("volleyError",it.message ?: "No message")
 
-                 }) {
-             override fun getParams(): MutableMap<String, String> {
-                 return mutableMapOf(Pair("relay",Gson().toJson(relay)))
-             }
-         }
+                 })
 
          networkQueue.add(resp)
     }
